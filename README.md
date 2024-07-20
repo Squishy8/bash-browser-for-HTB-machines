@@ -1,1 +1,1 @@
-# buscador-bash
+# bash-browser-for-HTB-machines
