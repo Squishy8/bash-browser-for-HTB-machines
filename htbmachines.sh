@@ -37,7 +37,8 @@ function searchMachine(){
     echo -e "\n${yellowColour}[+]${endCOlour} ${grayColour}Listing machine properties of ${endColour}${blueColour}$machineName${endColour}${grayColour}:${endColour}"
 
     #The forward slashes in the awk command let us make an interval for selection. In this case, what is being done is a selection from "name: <name of teh machine>" to "resuelta:". Having to open and close the forward slashes and separate them by a coma.
-    cat bundle.js | awk "/name: \"$machineName\"/,/resuelta:/" | grep -vE "id:|resuelta|sku:" |tr -d '"' |tr -d ',' | sed 's/^ *//' | while read line; do echo -en ${yellowColour}$(echo $line |awk '{print $1}')${endColour}; echo -e ${turquoiseColour}$(echo $line | awk '{for (i=2; i<=NF; i++) print $i}')${endColour}; done
+    cat bundle.js | awk "/name: \"$machineName\"/,/resuelta:/" | grep -vE "id:|resuelta|sku:" | tr -d '"' | tr -d ',' | sed 's/^ *//' | while read -r line; do echo -en "${yellowColour}$(echo $line | awk '{print $1}')${endColour} "; echo -e "${turquoiseColour}$(echo $line | awk '{for (i=2; i<=NF; i++) printf $i " "}')${endColour}"; done;
+
 
 
     #Failed
@@ -47,6 +48,13 @@ function searchMachine(){
 
 
     #The sed command says this: "anything that starts (^) with a space and is followed by any content (*), must delete the spaces (//)"
+}
+
+function searchIP(){
+
+    machineName="$(cat bundle.js | grep "ip: \"$ipAddress\"" -B 3| grep "name: " | awk 'NF{print $NF}' | tr -d '"|,')"
+
+    echo -e "\n${yellowColour}[+]${endColour} ${grayColour}$ipAddress -> ${endColour}${redColour}$machineName${endColour}\n"
 }
 
 function updateFiles(){
@@ -86,11 +94,12 @@ declare -i parameter_counter=0 #declare an integer and set it to zero to verify 
 
 
 
-while getopts "m:uh" arg; do #Commands with ":" after them indicate that they need to be passed an argument
+while getopts "m:i:uh" arg; do #Commands with ":" after them indicate that they need to be passed an argument
     case $arg in
         m) machineName=$OPTARG; let parameter_counter+=1;;
         u) let parameter_counter+=2;;
-        h) let parameter_counter+=3;; #call function helpPanel 
+        h) let parameter_counter+=3;; #call function helpPanel
+        i) ipAddress=$OPTARG; let parameter_counter+=4;;
     esac
 done
 
@@ -100,5 +109,7 @@ elif [ $parameter_counter -eq 2 ]; then
     updateFiles
 elif [ $parameter_counter -eq 3 ] || [ $parameter_counter -eq 0 ]; then
     helpPanel
+elif [ $parameter_counter -eq 4 ]; then
+    searchIP $ipAddress
 
 fi
